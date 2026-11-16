@@ -1,5 +1,30 @@
 # Windows one-shot setup for 20 + OpenMausBot
+param(
+    [switch]$CleanReset
+)
 $ErrorActionPreference = "Stop"
+
+if ($CleanReset) {
+    Write-Host "0. Clean reset: stopping OpenMausBot and wiping old state/cache..." -ForegroundColor Yellow
+    Get-Process | Where-Object { $_.ProcessName -match "OpenMausBot|mausbot" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
+
+    $pathsToWipe = @(
+        (Join-Path $env:USERPROFILE ".openmausbot"),
+        (Join-Path $env:APPDATA "OpenMausBot"),
+        (Join-Path $env:APPDATA "openmausbot"),
+        (Join-Path $env:LOCALAPPDATA "OpenMausBot"),
+        (Join-Path $env:LOCALAPPDATA "openmausbot"),
+        (Join-Path $env:LOCALAPPDATA "Programs\OpenMausBot"),
+        (Join-Path $env:LOCALAPPDATA "openmausbot-updater")
+    )
+    foreach ($p in $pathsToWipe) {
+        if (Test-Path $p) {
+            Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "   Removed $p" -ForegroundColor DarkYellow
+        }
+    }
+}
 
 Write-Host "1. Creating C:\dev and cloning repositories..." -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path "C:\dev" | Out-Null
